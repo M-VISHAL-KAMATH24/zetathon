@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f4f6f8;
+        }
+
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .box {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .box h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .category-list, .provider-list {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .category-item, .provider-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+
+        .provider-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .provider-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .provider-details {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-edit {
+            background-color: #ffd700;
+            margin-right: 5px;
+        }
+
+        .btn-delete {
+            background-color: #ff4444;
+            color: white;
+        }
+
+        .btn-add {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            font-size: 16px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        #addCategoryForm {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #newCategory {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Categories Box -->
+        <div class="box">
+            <h2>Service Categories</h2>
+            <form id="addCategoryForm">
+                <input type="text" id="newCategory" placeholder="Enter new category name">
+                <button type="submit" class="btn btn-add">Add Category</button>
+            </form>
+            <ul class="category-list" id="categoryList">
+                <!-- Categories will be added here by JavaScript -->
+            </ul>
+        </div>
+
+        <!-- Service Providers Box -->
+        <div class="box">
+            <h2>Service Providers</h2>
+            <ul class="provider-list" id="providerList">
+                <!-- Providers will be added here by JavaScript -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Initial categories data
+        let categories = [
+            'AC Technicians',
+            'Electricians',
+            'Plumbers',
+            'Mechanics',
+            'Carpenters',
+            'Technicians',
+            'Cleaning',
+            'Pest Control',
+            'Home Appliances Repair',
+            'Building Painting'
+        ];
+
+        // Sample providers data
+        let providers = [
+            {
+                name: 'John Doe',
+                category: 'Plumbers',
+                phone: '+91 9876543210',
+                email: 'john@example.com',
+                experience: '5 years'
+            },
+            {
+                name: 'Jane Smith',
+                category: 'Electricians',
+                phone: '+91 9876543211',
+                email: 'jane@example.com',
+                experience: '8 years'
+            },
+            {
+                name: 'Mike Johnson',
+                category: 'AC Technicians',
+                phone: '+91 9876543212',
+                email: 'mike@example.com',
+                experience: '3 years'
+            }
+        ];
+
+        // Render categories
+        function renderCategories() {
+            const categoryList = document.getElementById('categoryList');
+            categoryList.innerHTML = categories.map(category => `
+                <li class="category-item">
+                    <span>${category}</span>
+                    <div class="actions">
+                        <button class="btn btn-edit" onclick="editCategory('${category}')">Edit</button>
+                        <button class="btn btn-delete" onclick="deleteCategory('${category}')">Delete</button>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        // Render providers
+        function renderProviders() {
+            const providerList = document.getElementById('providerList');
+            providerList.innerHTML = providers.map(provider => `
+                <li class="provider-item">
+                    <div class="provider-header">
+                        <strong>${provider.name}</strong>
+                        <button class="btn btn-delete" onclick="deleteProvider('${provider.email}')">Remove</button>
+                    </div>
+                    <div class="provider-details">
+                        <p>Category: ${provider.category}</p>
+                        <p>Phone: ${provider.phone}</p>
+                        <p>Email: ${provider.email}</p>
+                        <p>Experience: ${provider.experience}</p>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        // Add new category
+        document.getElementById('addCategoryForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = document.getElementById('newCategory');
+            const newCategory = input.value.trim();
+            
+            if (newCategory && !categories.includes(newCategory)) {
+                categories.push(newCategory);
+                renderCategories();
+                input.value = '';
+            }
+        });
+
+        // Edit category
+        function editCategory(oldCategory) {
+            const newCategory = prompt('Edit category name:', oldCategory);
+            if (newCategory && newCategory !== oldCategory) {
+                categories = categories.map(cat => 
+                    cat === oldCategory ? newCategory : cat
+                );
+                renderCategories();
+            }
+        }
+
+        // Delete category
+        function deleteCategory(category) {
+            if (confirm(`Are you sure you want to delete "${category}"?`)) {
+                categories = categories.filter(cat => cat !== category);
+                renderCategories();
+            }
+        }
+
+        // Delete provider
+        function deleteProvider(email) {
+            if (confirm('Are you sure you want to remove this service provider?')) {
+                providers = providers.filter(provider => provider.email !== email);
+                renderProviders();
+            }
+        }
+
+        // Initial render
+        renderCategories();
+        renderProviders();
+    </script>
+</body>
+</html>

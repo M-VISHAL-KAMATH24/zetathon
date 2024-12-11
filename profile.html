@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            line-height: 1.6;
+        }
+
+        .profile-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .profile-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 2rem;
+            border: 4px solid #764ba2;
+        }
+
+        .profile-image-upload {
+            display: none;
+        }
+
+        .profile-image-label {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .profile-image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 0 0 50% 50%;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .profile-image-label:hover .profile-image-overlay {
+            opacity: 1;
+        }
+
+        .profile-details {
+            flex-grow: 1;
+        }
+
+        .profile-form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .form-group input, 
+        .form-group select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .edit-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-edit {
+            background-color: #764ba2;
+            color: white;
+        }
+
+        .btn-save {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-cancel {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .profile-form input:disabled {
+            background-color: #f4f4f4;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <div class="profile-header">
+            <label class="profile-image-label">
+                <input type="file" accept="image/*" class="profile-image-upload" id="profileImageUpload">
+                <img src="/api/placeholder/200/200" alt="Profile" class="profile-image" id="profileImage">
+                <div class="profile-image-overlay">Change Photo</div>
+            </label>
+            
+            <div class="profile-details">
+                <form id="profileForm" class="profile-form">
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" name="firstName" disabled>
+                        <div id="firstNameError" class="error-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" name="lastName" disabled>
+                        <div id="lastNameError" class="error-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" disabled>
+                        <div id="emailError" class="error-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" disabled>
+                        <div id="phoneError" class="error-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="serviceType">Service Type</label>
+                        <select id="serviceType" name="serviceType" disabled>
+                            <option value="">Select Service</option>
+                            <option value="ac-technician">AC Technician</option>
+                            <option value="electrician">Electrician</option>
+                            <option value="plumber">Plumber</option>
+                            <option value="mechanic">Mechanic</option>
+                            <option value="carpenter">Carpenter</option>
+                            <option value="technician">Technician</option>
+                            <option value="cleaning">Cleaning Services</option>
+                            <option value="pest-control">Pest Control</option>
+                            <option value="home-appliances">Home Appliances Repair</option>
+                            <option value="painting">Building Painting</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="edit-buttons">
+            <button class="btn btn-edit" id="editProfileBtn">Edit</button>
+            <button class="btn btn-save" id="saveProfileBtn" style="display: none;">Save</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const profileForm = document.getElementById('profileForm');
+            const editProfileBtn = document.getElementById('editProfileBtn');
+            const saveProfileBtn = document.getElementById('saveProfileBtn');
+            const profileImage = document.getElementById('profileImage');
+            const profileImageUpload = document.getElementById('profileImageUpload');
+            
+            // User data with editable fields
+            const userData = {
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'john.doe@example.com',
+                phone: '+1 (555) 123-4567',
+                serviceType: 'electrician',
+                profileImageUrl: '/api/placeholder/200/200'
+            };
+
+            // Validation functions
+            const validations = {
+                firstName: (value) => {
+                    const firstNameError = document.getElementById('firstNameError');
+                    if (!value.trim()) {
+                        firstNameError.textContent = 'First name is required';
+                        return false;
+                    }
+                    firstNameError.textContent = '';
+                    return true;
+                },
+                lastName: (value) => {
+                    const lastNameError = document.getElementById('lastNameError');
+                    if (!value.trim()) {
+                        lastNameError.textContent = 'Last name is required';
+                        return false;
+                    }
+                    lastNameError.textContent = '';
+                    return true;
+                },
+                email: (value) => {
+                    const emailError = document.getElementById('emailError');
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!value.trim()) {
+                        emailError.textContent = 'Email is required';
+                        return false;
+                    }
+                    if (!emailRegex.test(value)) {
+                        emailError.textContent = 'Invalid email format';
+                        return false;
+                    }
+                    emailError.textContent = '';
+                    return true;
+                },
+                phone: (value) => {
+                    const phoneError = document.getElementById('phoneError');
+                    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+                    if (!value.trim()) {
+                        phoneError.textContent = 'Phone number is required';
+                        return false;
+                    }
+                    if (!phoneRegex.test(value)) {
+                        phoneError.textContent = 'Invalid phone number';
+                        return false;
+                    }
+                    phoneError.textContent = '';
+                    return true;
+                }
+            };
+
+            // Populate form with user data
+            function populateProfileForm() {
+                document.getElementById('firstName').value = userData.firstName;
+                document.getElementById('lastName').value = userData.lastName;
+                document.getElementById('email').value = userData.email;
+                document.getElementById('phone').value = userData.phone;
+                document.getElementById('serviceType').value = userData.serviceType;
+                profileImage.src = userData.profileImageUrl;
+            }
+
+            // Initial population
+            populateProfileForm();
+
+            // Edit profile functionality
+            editProfileBtn.addEventListener('click', () => {
+                const inputs = profileForm.querySelectorAll('input, select');
+                
+                // Enable inputs
+                inputs.forEach(input => {
+                    input.disabled = false;
+                });
+
+                // Toggle button visibility
+                editProfileBtn.style.display = 'none';
+                saveProfileBtn.style.display = 'block';
+            });
+
+            // Save profile functionality
+            saveProfileBtn.addEventListener('click', () => {
+                // Validate all fields before saving
+                const firstNameInput = document.getElementById('firstName');
+                const lastNameInput = document.getElementById('lastName');
+                const emailInput = document.getElementById('email');
+                const phoneInput = document.getElementById('phone');
+
+                const isFirstNameValid = validations.firstName(firstNameInput.value);
+                const isLastNameValid = validations.lastName(lastNameInput.value);
+                const isEmailValid = validations.email(emailInput.value);
+                const isPhoneValid = validations.phone(phoneInput.value);
+
+                if (isFirstNameValid && isLastNameValid && isEmailValid && isPhoneValid) {
+                    // Update user data
+                    userData.firstName = firstNameInput.value;
+                    userData.lastName = lastNameInput.value;
+                    userData.email = emailInput.value;
+                    userData.phone = phoneInput.value;
+
+                    // Disable inputs
+                    const inputs = profileForm.querySelectorAll('input, select');
+                    inputs.forEach(input => {
+                        input.disabled = true;
+                    });
+
+                    // Toggle button visibility
+                    editProfileBtn.style.display = 'block';
+                    saveProfileBtn.style.display = 'none';
+
+                    // In a real app, you would send this data to the backend
+                    alert('Profile updated successfully!');
+                }
+            });
+
+            // Profile image upload
+            profileImageUpload.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        profileImage.src = e.target.result;
+                        // In a real app, you'd upload this to a server
+                        userData.profileImageUrl = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
